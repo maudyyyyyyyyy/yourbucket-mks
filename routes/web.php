@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\OrderHistoryController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OrdersController;
+
 
 //Landing Page Routes
 Route::get('/', function () {
@@ -55,4 +58,9 @@ Route::prefix('/admin/users')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('admin.users.index');
     Route::delete('/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 });
+Route::prefix('admin/orders')->group(function () {
+    Route::get('/', [OrdersController::class, 'index'])->name('admin.orders.index');
+    Route::patch('/{order}/status', [OrdersController::class, 'updateStatus'])->name('admin.orders.update-status');
+});
 
+Route::get('/admin/history-order', [OrderHistoryController::class, 'index'])->name('admin.history.index');

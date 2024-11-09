@@ -29,13 +29,13 @@
                     </p>
 
                     <a href="{{ route('admin.categories.index') }}"
-                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.categories.*') ? 'active-nav' : 'text-secondary hover-nav' }}">
+                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.categories.index') ? 'active-nav' : 'text-secondary hover-nav' }}">
                         <i class="bi bi-collection-fill"></i>
                         <span class="sidebar-text">Categories</span>
                     </a>
 
                     <a href="{{ route('admin.products.index') }}"
-                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.products') ? 'active-nav' : 'text-secondary hover-nav' }}">
+                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.products.index') ? 'active-nav' : 'text-secondary hover-nav' }}">
                         <i class="bi bi-box-seam-fill"></i>
                         <span class="sidebar-text">Products</span>
                     </a>
@@ -43,11 +43,15 @@
 
                 <div class="mt-4">
                     <p class="px-3 text-uppercase small fw-medium mb-2 text-secondary sidebar-text">Sales & Orders</p>
-
-                    <a href=""
-                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.orders.*') ? 'active-nav' : 'text-secondary hover-nav' }}">
+                    <a href="{{ route('admin.orders.index') }}"
+                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.orders.index') ? 'active-nav' : 'text-secondary hover-nav' }}">
                         <i class="bi bi-cart-check-fill"></i>
                         <span class="sidebar-text">Orders</span>
+                    </a>
+                    <a href="{{ route('admin.history.index') }}"
+                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.history.index') ? 'active-nav' : 'text-secondary hover-nav' }}">
+                        <i class="bi bi-clock-history"></i>
+                        <span class="sidebar-text">Order History</span>
                     </a>
                 </div>
 
@@ -55,7 +59,7 @@
                     <p class="px-3 text-uppercase small fw-medium mb-2 text-secondary sidebar-text">User Management</p>
 
                     <a href="{{ route('admin.users.index') }}"
-                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.users.*') ? 'active-nav' : 'text-secondary hover-nav' }}">
+                        class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-2 {{ request()->routeIs('admin.users.index') ? 'active-nav' : 'text-secondary hover-nav' }}">
                         <i class="bi bi-people-fill"></i>
                         <span class="sidebar-text">Users</span>
                     </a>
