@@ -5,11 +5,11 @@
 @section('header_subtitle', 'Monitor your store performance')
 
 @section('content')
-    <div class="max-w-7xl mx-auto px-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <!-- Stats Cards -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
             <!-- Sales Card -->
-            <div class="bg-white rounded-lg p-4 shadow hover:shadow-md transition">
+            <div class="bg-white rounded-lg p-4 sm:p-6 shadow hover:shadow-md transition">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <div class="p-2 bg-emerald-50 rounded">
@@ -24,7 +24,7 @@
                     <span
                         class="bg-emerald-50 text-emerald-600 px-2 py-1 rounded text-xs">+{{ number_format($salesGrowth, 1) }}%</span>
                 </div>
-                <p class="text-2xl font-bold">Rp {{ number_format($totalSalesThisMonth, 0, ',', '.') }}</p>
+                <p class="text-xl sm:text-2xl font-bold">Rp {{ number_format($totalSalesThisMonth, 0, ',', '.') }}</p>
                 <div class="mt-2 h-1.5 bg-gray-100 rounded-full">
                     <div class="h-full bg-emerald-500 rounded-full" style="width: {{ min($salesTargetProgress, 100) }}%">
                     </div>
@@ -33,7 +33,7 @@
             </div>
 
             <!-- Orders Card -->
-            <div class="bg-white rounded-lg p-4 shadow hover:shadow-md transition">
+            <div class="bg-white rounded-lg p-4 sm:p-6 shadow hover:shadow-md transition">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <div class="p-2 bg-blue-50 rounded">
@@ -47,25 +47,24 @@
                     <span
                         class="bg-blue-50 text-blue-600 px-2 py-1 rounded text-xs">+{{ number_format($ordersGrowth, 1) }}%</span>
                 </div>
-                <p class="text-2xl font-bold">{{ number_format($totalOrders) }}</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ number_format($totalOrders) }}</p>
                 <div class="mt-2 grid grid-cols-3 gap-2">
                     <div class="text-center p-2 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500">Pending</p>
-                        <p class="font-medium">{{ $orderStats['pending'] }}</p>
+                        <p class="text-[10px] sm:text-xs text-gray-500">Pending</p>
+                        <p class="text-sm sm:text-base font-medium">{{ $orderStats['pending'] }}</p>
                     </div>
                     <div class="text-center p-2 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500">Processing</p>
-                        <p class="font-medium">{{ $orderStats['processing'] }}</p>
+                        <p class="text-[10px] sm:text-xs text-gray-500">Processing</p>
+                        <p class="text-sm sm:text-base font-medium">{{ $orderStats['processing'] }}</p>
                     </div>
                     <div class="text-center p-2 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500">Completed</p>
-                        <p class="font-medium">{{ $orderStats['completed'] }}</p>
+                        <p class="text-[10px] sm:text-xs text-gray-500">Completed</p>
+                        <p class="text-sm sm:text-base font-medium">{{ $orderStats['completed'] }}</p>
                     </div>
                 </div>
             </div>
-
             <!-- Products Card -->
-            <div class="bg-white rounded-lg p-4 shadow hover:shadow-md transition">
+            <div class="bg-white rounded-lg p-4 sm:p-6 shadow hover:shadow-md transition">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <div class="p-2 bg-purple-50 rounded">
@@ -79,21 +78,22 @@
                     <span
                         class="bg-purple-50 text-purple-600 px-2 py-1 rounded text-xs">+{{ $productsStats['newThisMonth'] }}</span>
                 </div>
-                <p class="text-2xl font-bold">{{ number_format($productsStats['total']) }}</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ number_format($productsStats['total']) }}</p>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                     <div class="text-center p-2 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500">In Stock</p>
-                        <p class="font-medium">{{ number_format($productsStats['inStock']) }}</p>
+                        <p class="text-[10px] sm:text-xs text-gray-500">In Stock</p>
+                        <p class="text-sm sm:text-base font-medium">{{ number_format($productsStats['inStock']) }}</p>
                     </div>
                     <div class="text-center p-2 bg-gray-50 rounded">
-                        <p class="text-xs text-gray-500">Low Stock</p>
-                        <p class="font-medium text-red-500">{{ number_format($productsStats['lowStock']) }}</p>
+                        <p class="text-[10px] sm:text-xs text-gray-500">Low Stock</p>
+                        <p class="text-sm sm:text-base font-medium text-red-500">
+                            {{ number_format($productsStats['lowStock']) }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Customers Card -->
-            <div class="bg-white rounded-lg p-4 shadow hover:shadow-md transition">
+            <div class="bg-white rounded-lg p-4 sm:p-6 shadow hover:shadow-md transition">
                 <div class="flex items-center justify-between mb-2">
                     <div class="flex items-center gap-2">
                         <div class="p-2 bg-amber-50 rounded">
@@ -108,39 +108,39 @@
                     <span
                         class="bg-amber-50 text-amber-600 px-2 py-1 rounded text-xs">+{{ number_format($customersGrowth, 1) }}%</span>
                 </div>
-                <p class="text-2xl font-bold">{{ number_format($customersStats['total']) }}</p>
+                <p class="text-xl sm:text-2xl font-bold">{{ number_format($customersStats['total']) }}</p>
                 <div class="mt-2 p-2 bg-gray-50 rounded">
                     <div class="flex justify-between items-center">
-                        <span class="text-xs text-gray-500">Active this month</span>
-                        <span class="font-medium">{{ number_format($customersStats['activeThisMonth']) }}</span>
+                        <span class="text-[10px] sm:text-xs text-gray-500">Active this month</span>
+                        <span
+                            class="text-sm sm:text-base font-medium">{{ number_format($customersStats['activeThisMonth']) }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Charts and Tables Section -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
             <!-- Sales Chart -->
-            <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
+            <div class="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
                     <div>
                         <h3 class="text-base font-semibold text-gray-800">Sales Overview</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">Ringkasan penjualan periode tertentu</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Summary of sales for selected period</p>
                     </div>
                     <select
                         class="text-xs bg-gray-50 border border-gray-200 rounded px-3 py-1.5 hover:border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
                         id="salesChartPeriod">
-                        <option value="7">7 Hari Terakhir</option>
-                        <option value="30">30 Hari Terakhir</option>
-                        <option value="365">Tahun Ini</option>
+                        <option value="7">Last 7 Days</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="365">This Year</option>
                     </select>
                 </div>
-                <div id="salesChart" class="w-full h-[300px]"></div>
+                <div id="salesChart" class="w-full h-[250px] sm:h-[300px]"></div>
             </div>
-
             <!-- Top Products -->
-            <div class="bg-white rounded-lg p-4 shadow-sm border border-gray-100">
-                <div class="flex items-center justify-between mb-4">
+            <div class="bg-white rounded-lg p-4 sm:p-6 shadow-sm border border-gray-100">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2">
                     <h3 class="text-base font-semibold text-gray-800">Top Products</h3>
                     <select
                         class="text-xs bg-gray-50 border border-gray-200 rounded px-3 py-1.5 hover:border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500/20 transition-all cursor-pointer"
@@ -149,7 +149,7 @@
                         <option value="quantity">By Quantity</option>
                     </select>
                 </div>
-                <div class="space-y-2">
+                <div class="space-y-2 max-h-[250px] sm:max-h-[300px] overflow-y-auto">
                     @forelse($topProducts as $product)
                         <div class="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition duration-150">
                             <div class="flex items-center">
@@ -166,72 +166,111 @@
                                         </svg>
                                     @endif
                                 </div>
-                                <div class="ml-2 flex-1">
-                                    <p class="font-medium text-xs">{{ $product->name }}</p>
-                                    <p class="text-[11px] text-gray-500">{{ $product->total_sold }} sold</p>
+                                <div class="ml-3 flex-1">
+                                    <p class="text-sm font-medium text-gray-800">{{ $product->name }}</p>
+                                    <p class="text-xs text-gray-500">{{ $product->total_sold }} sold</p>
                                 </div>
-                                <p class="text-xs font-medium">Rp {{ number_format($product->revenue, 0, ',', '.') }}</p>
+                                <div class="text-right">
+                                    <p class="text-sm font-medium text-gray-800">
+                                        Rp {{ number_format($product->revenue, 0, ',', '.') }}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     @empty
-                        <div class="text-center py-2 text-gray-500 text-xs">No products data available</div>
+                        <div class="text-center py-4 text-gray-500 text-sm">
+                            No products data available
+                        </div>
                     @endforelse
                 </div>
             </div>
         </div>
 
         <!-- Recent Orders Table -->
-        <div class="bg-white rounded-lg shadow mb-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-100">
             <div class="p-4 border-b border-gray-100">
-                <div class="flex items-center justify-between">
-                    <h3 class="font-medium">Recent Orders</h3>
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 class="text-base font-semibold text-gray-800">Recent Orders</h3>
                 </div>
             </div>
             <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead>
-                        <tr class="bg-gray-50">
-                            <th class="px-4 py-3 text-left font-medium text-gray-500">Order ID</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500">Customer</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500">Items</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500">Total</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500">Status</th>
-                            <th class="px-4 py-3 text-left font-medium text-gray-500">Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($recentOrders as $order)
-                            <tr class="border-t border-gray-100">
-                                <td class="px-4 py-3">#{{ $order->id }}</td>
-                                <td class="px-4 py-3">{{ $order->user?->name }}</td>
-                                <td class="px-4 py-3">{{ $order->items->count() }}</td>
-                                <td class="px-4 py-3">Rp {{ number_format($order->total_amount, 0, ',', '.') }}</td>
-                                <td class="px-4 py-3">
-                                    <span
-                                        class="px-2 py-1 text-xs rounded-full {{ match ($order->status) {
-                                            'delivered', 'completed' => 'bg-green-50 text-green-600',
-                                            'pending' => 'bg-yellow-50 text-yellow-600',
-                                            'processing' => 'bg-blue-50 text-blue-600',
-                                            'shipped' => 'bg-indigo-50 text-indigo-600',
-                                            'cancelled' => 'bg-red-50 text-red-600',
-                                            default => 'bg-gray-50 text-gray-600',
-                                        } }}">
-                                        {{ ucfirst($order->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-4 py-3">{{ $order->created_at->format('d M Y') }}</td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="px-4 py-3 text-center text-gray-500">No orders found</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                <div class="min-w-full inline-block align-middle">
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Order ID
+                                    </th>
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Customer
+                                    </th>
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                        Items
+                                    </th>
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Total
+                                    </th>
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                        Status
+                                    </th>
+                                    <th scope="col"
+                                        class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
+                                        Date
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse($recentOrders as $order)
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            #{{ $order->id }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $order->user?->name }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                                            {{ $order->items->count() }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
+                                            Rp {{ number_format($order->total_amount, 0, ',', '.') }}
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap">
+                                            <span
+                                                class="px-2 py-1 text-xs rounded-full {{ match ($order->status) {
+                                                    'delivered', 'completed' => 'bg-green-50 text-green-600',
+                                                    'pending' => 'bg-yellow-50 text-yellow-600',
+                                                    'processing' => 'bg-blue-50 text-blue-600',
+                                                    'shipped' => 'bg-indigo-50 text-indigo-600',
+                                                    'cancelled' => 'bg-red-50 text-red-600',
+                                                    default => 'bg-gray-50 text-gray-600',
+                                                } }}">
+                                                {{ ucfirst($order->status) }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500 hidden sm:table-cell">
+                                            {{ $order->created_at->format('d M Y') }}
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="6" class="px-4 py-3 text-center text-gray-500 text-sm">
+                                            No orders found
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-
 @endsection
 
 @push('scripts')
@@ -241,11 +280,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const options = {
                 series: [{
-                    name: 'Penjualan',
+                    name: 'Sales',
                     data: @json($salesChart['data'])
                 }],
                 chart: {
-                    height: '400px',
+                    height: '100%',
                     type: 'area',
                     toolbar: {
                         show: false
@@ -254,7 +293,6 @@
                         enabled: false
                     },
                     fontFamily: 'Inter, sans-serif',
-                    background: 'transparent'
                 },
                 dataLabels: {
                     enabled: false
@@ -274,12 +312,10 @@
                     },
                     labels: {
                         style: {
-                            fontSize: '13px',
+                            fontSize: '12px',
                             fontWeight: 500,
                             colors: '#64748b'
-                        },
-                        rotateAlways: false,
-                        hideOverlappingLabels: true
+                        }
                     }
                 },
                 yaxis: {
@@ -288,7 +324,7 @@
                             return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
                         },
                         style: {
-                            fontSize: '13px',
+                            fontSize: '12px',
                             fontWeight: 500,
                             colors: '#64748b'
                         }
@@ -300,9 +336,6 @@
                         formatter: function(value) {
                             return 'Rp ' + new Intl.NumberFormat('id-ID').format(value);
                         }
-                    },
-                    style: {
-                        fontSize: '12px'
                     }
                 },
                 colors: ['#0EA5E9'],
@@ -320,32 +353,11 @@
                 grid: {
                     borderColor: '#e2e8f0',
                     strokeDashArray: 4,
-                    xaxis: {
-                        lines: {
-                            show: true
-                        }
-                    },
-                    yaxis: {
-                        lines: {
-                            show: true
-                        }
-                    },
                     padding: {
                         top: 0,
                         right: 0,
                         bottom: 0,
                         left: 10
-                    }
-                },
-                markers: {
-                    size: 5,
-                    strokeColors: '#0EA5E9',
-                    strokeWidth: 2,
-                    fillOpacity: 1,
-                    shape: 'circle',
-                    radius: 2,
-                    hover: {
-                        size: 8
                     }
                 }
             };
@@ -370,6 +382,7 @@
             });
         });
     </script>
+
     <style>
         .apexcharts-tooltip {
             @apply shadow-lg border-0 rounded-lg !important;
@@ -385,6 +398,24 @@
 
         .apexcharts-tooltip.apexcharts-theme-dark {
             @apply bg-gray-800 !important;
+        }
+
+        @media (max-width: 640px) {
+            .apexcharts-canvas {
+                padding: 0 !important;
+            }
+
+            .apexcharts-title-text {
+                font-size: 14px !important;
+            }
+
+            .apexcharts-legend-text {
+                font-size: 12px !important;
+            }
+
+            .apexcharts-text tspan {
+                font-size: 12px !important;
+            }
         }
     </style>
 @endpush

@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
 <body class="min-h-screen bg-gray-50">
@@ -62,9 +63,54 @@
                     </a>
 
                     <!-- Auth Links -->
-                    <a href="{{ route('login') }}" class="text-gray-600 hover:text-emerald-600">Login</a>
-                    <a href="{{ route('register') }}"
-                        class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl hover:opacity-90">Register</a>
+                    @guest
+                        <a href="{{ route('login') }}" class="text-gray-600 hover:text-emerald-600">Login</a>
+                        <a href="{{ route('register') }}"
+                            class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 rounded-xl hover:opacity-90">Register</a>
+                    @else
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false"
+                                class="flex items-center space-x-2 text-gray-600 hover:text-emerald-600 focus:outline-none">
+                                <span>{{ Auth::user()->name }}</span>
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
+
+                            <!-- Dropdown Menu -->
+                            <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute right-0 mt-2 w-48 py-2 bg-white rounded-xl shadow-lg border border-gray-100"
+                                style="display: none;">
+
+                                @if (Auth::user()->isAdmin())
+                                    <a href="{{ route('admin.dashboard') }}"
+                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-emerald-600">
+                                        Dashboard
+                                    </a>
+                                @endif
+                                <a href="/orders"
+                                    class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-emerald-600">
+                                    Orders
+                                </a>
+
+                                <div class="border-t border-gray-100 my-1"></div>
+
+                                <form method="POST" action="{{ route('auth.logout') }}" class="block">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-emerald-600">
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endguest
                 </div>
             </div>
         </nav>
@@ -146,6 +192,21 @@
             </div>
         </div>
     </footer>
+
+    <!-- Flash Messages -->
+    @if (session('success'))
+        <div class="fixed bottom-4 right-4 px-6 py-3 bg-green-500 text-white rounded-xl shadow-lg"
+            x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" x-transition>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="fixed bottom-4 right-4 px-6 py-3 bg-red-500 text-white rounded-xl shadow-lg"
+            x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" x-transition>
+            {{ session('error') }}
+        </div>
+    @endif
 </body>
 
 </html>

@@ -70,28 +70,34 @@
         <!-- User Profile -->
         <div class="border-top p-3">
             <div class="d-flex align-items-center gap-3">
+                @php
+                    $initials = collect(explode(' ', Auth::user()->name))
+                        ->map(fn($segment) => substr($segment, 0, 1))
+                        ->join('');
+                    $initials = strtoupper($initials);
+                @endphp
                 <div class="rounded-circle bg-success d-flex align-items-center justify-content-center"
                     style="width: 40px; height: 40px;">
-                    <span class="text-white fw-medium">JD</span>
+                    <span class="text-white fw-medium">{{ $initials }}</span>
                 </div>
                 <div class="flex-grow-1 sidebar-text">
-                    <h6 class="mb-0 text-dark fw-medium">John Doe</h6>
-                    <small class="text-muted">Super Admin</small>
+                    <h6 class="mb-0 text-dark fw-medium">{{ Auth::user()->name }}</h6>
+                    <small class="text-muted">{{ Auth::user()->role }}</small>
                 </div>
                 <div class="dropdown">
                     <button class="btn btn-link text-secondary p-0" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-three-dots-vertical"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person-fill me-2"></i>Profile</a>
-                        </li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-gear-fill me-2"></i>Settings</a>
-                        </li>
                         <li>
-                            <hr class="dropdown-divider">
+                            <form action="{{ route('auth.logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger">
+                                    <i class="bi bi-box-arrow-right"></i>
+                                    <span>Logout</span>
+                                </button>
+                            </form>
                         </li>
-                        <li><a class="dropdown-item text-danger" href="#"><i
-                                    class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                     </ul>
                 </div>
             </div>
