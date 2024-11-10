@@ -1,0 +1,283 @@
+class ShoppingCart {
+    constructor() {
+        console.log('ShoppingCart: Initializing...');
+        this.items = this.getCartFromStorage();
+        this.init();
+    }
+
+    init() {
+        if (window.location.pathname.includes('cart')) {
+            this.updateCartUI();
+        }
+        this.updateCartCount();
+        this.attachEventListeners();
+    }
+
+    getCartFromStorage() {
+        try {
+            const cart = localStorage.getItem('shopping_cart');
+            return cart ? JSON.parse(cart) : [];
+        } catch (error) {
+            console.error('Error getting cart from storage:', error);
+            return [];
+        }
+    }
+
+    saveCartToStorage() {
+        try {
+            localStorage.setItem('shopping_cart', JSON.stringify(this.items));
+            this.updateCartCount();
+        } catch (error) {
+            console.error('Error saving cart to storage:', error);
+        }
+    }
+
+    updateCartCount() {
+        const cartCount = document.getElementById('cart-count');
+        if (cartCount) {
+            const totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
+            cartCount.textContent = totalItems;
+            cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
+        }
+    }
+
+    addItem(product) {
+        try {
+            const existingItem = this.items.find(item => item.id === parseInt(product.id));
+
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                this.items.push({
+                    id: parseInt(product.id),
+                    name: product.name,
+                    price: parseFloat(product.price),
+                    image: product.image,
+                    category: product.category_name,
+                    quantity: 1
+                });
+            }
+
+            this.saveCartToStorage();
+            this.updateCartUI();
+            this.showNotification('Produk berhasil ditambahkan ke keranjang');
+        } catch (error) {
+            console.error('Error adding item:', error);
+        }
+    }
+
+    removeItem(productId) {
+        try {
+            productId = parseInt(productId);
+            this.items = this.items.filter(item => item.id !== productId);
+            this.saveCartToStorage();
+            this.updateCartUI();
+            this.showNotification('Produk berhasil dihapus dari keranjang');
+        } catch (error) {
+            console.error('Error removing item:', error);
+        }
+    }
+
+    updateQuantity(productId, changeAmount) {
+        try {
+            productId = parseInt(productId);
+            const item = this.items.find(item => item.id === productId);
+
+            if (item) {
+                const newQuantity = item.quantity + changeAmount;
+                if (newQuantity < 1) {
+                    this.removeItem(productId);
+                } else {
+                    item.quantity = newQuantity;
+                    this.saveCartToStorage();
+                    this.updateCartUI();
+                }
+            }
+        } catch (error) {
+            console.error('Error updating quantity:', error);
+        }
+    }
+
+    calculateSubtotal() {
+        return this.items.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
+    }
+
+    formatPrice(price) {
+        return new Intl.NumberFormat('id-ID', {
+            style: 'currency',
+            currency: 'IDR',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(price);
+    }
+
+    createCartItemElement(item) {
+        const div = document.createElement('div');
+        div.className = 'p-6 border-b border-gray-200';
+        div.innerHTML = `
+            <div class="flex items-center">
+                <img src="${item.image}" alt="${item.name}" 
+                     class="w-20 h-20 object-cover rounded-lg">
+                <div class="ml-4 flex-1">
+                    <h3 class="text-lg font-medium text-gray-900">${item.name}</h3>
+                    <p class="mt-1 text-sm text-gray-500">${item.category}</p>
+                    <div class="mt-2 flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <button type="button" class="quantity-btn decrease-quantity p-1 rounded-md hover:bg-gray-100" 
+                                    data-action="decrease" data-product-id="${item.id}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                                </svg>
+                            </button>
+                            <span class="text-gray-600 quantity-display">${item.quantity}</span>
+                            <button type="button" class="quantity-btn increase-quantity p-1 rounded-md hover:bg-gray-100"
+                                    data-action="increase" data-product-id="${item.id}">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m-8-6h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <span class="font-medium text-gray-900">
+                            ${this.formatPrice(item.price * item.quantity)}
+                        </span>
+                    </div>
+                </div>
+                <button type="button" class="remove-item ml-4 text-gray-400 hover:text-red-500"
+                        data-action="remove" data-product-id="${item.id}">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        this.attachItemEventListeners(div, item.id);
+        return div;
+    }
+
+    attachItemEventListeners(element, productId) {
+        // Decrease quantity button
+        const decreaseBtn = element.querySelector('[data-action="decrease"]');
+        if (decreaseBtn) {
+            decreaseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.updateQuantity(productId, -1);
+            });
+        }
+
+        // Increase quantity button
+        const increaseBtn = element.querySelector('[data-action="increase"]');
+        if (increaseBtn) {
+            increaseBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.updateQuantity(productId, 1);
+            });
+        }
+
+        // Remove item button
+        const removeBtn = element.querySelector('[data-action="remove"]');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.removeItem(productId);
+            });
+        }
+    }
+
+    updateCartUI() {
+        const cartContainer = document.querySelector('.cart-items');
+        if (!cartContainer) return;
+
+        cartContainer.innerHTML = '';
+
+        if (this.items.length === 0) {
+            cartContainer.innerHTML = `
+                <div class="p-6 text-center text-gray-500">
+                    <p class="mb-4">Keranjang belanja Anda kosong</p>
+                    <a href="/" class="text-emerald-600 hover:text-emerald-700">
+                        Lanjutkan Belanja
+                    </a>
+                </div>
+            `;
+            this.updateOrderSummary(0, 0);
+            return;
+        }
+
+        this.items.forEach(item => {
+            const itemElement = this.createCartItemElement(item);
+            cartContainer.appendChild(itemElement);
+        });
+
+        const subtotal = this.calculateSubtotal();
+        const shipping = subtotal > 0 ? 20000 : 0;
+        this.updateOrderSummary(subtotal, shipping);
+    }
+
+    updateOrderSummary(subtotal, shipping) {
+        const elements = {
+            subtotal: document.querySelector('[data-summary="subtotal"]'),
+            shipping: document.querySelector('[data-summary="shipping"]'),
+            total: document.querySelector('[data-summary="total"]'),
+            checkout: document.querySelector('[data-action="checkout"]')
+        };
+
+        if (elements.subtotal) elements.subtotal.textContent = this.formatPrice(subtotal);
+        if (elements.shipping) elements.shipping.textContent = this.formatPrice(shipping);
+        if (elements.total) elements.total.textContent = this.formatPrice(subtotal + shipping);
+
+        if (elements.checkout) {
+            elements.checkout.disabled = subtotal === 0;
+            elements.checkout.className = subtotal === 0
+                ? 'mt-6 w-full bg-gray-300 cursor-not-allowed text-white py-3 px-4 rounded-lg'
+                : 'mt-6 w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700';
+        }
+    }
+
+    attachEventListeners() {
+        // Event delegation untuk tombol "Add to Cart"
+        document.addEventListener('click', (e) => {
+            const addToCartButton = e.target.closest('.add-to-cart');
+            if (addToCartButton) {
+                e.preventDefault();
+                const productCard = addToCartButton.closest('.product-card');
+                if (productCard) {
+                    const product = {
+                        id: productCard.dataset.id,
+                        name: productCard.dataset.name,
+                        price: productCard.dataset.price,
+                        image: productCard.dataset.image,
+                        category_name: productCard.dataset.category
+                    };
+                    this.addItem(product);
+                }
+            }
+        });
+
+        // Event listener untuk tombol checkout
+        const checkoutButton = document.querySelector('[data-action="checkout"]');
+        if (checkoutButton) {
+            checkoutButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (this.items.length > 0) {
+                    window.location.href = '/checkout';
+                }
+            });
+        }
+    }
+
+    showNotification(message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-y-0 z-50';
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.classList.add('translate-y-full');
+            setTimeout(() => notification.remove(), 300);
+        }, 3000);
+    }
+}
+
+export default ShoppingCart;

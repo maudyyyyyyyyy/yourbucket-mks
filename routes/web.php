@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\User\UserOrderController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\UserController;
@@ -8,16 +9,16 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrderHistoryController;
+use App\Http\Controllers\User\UserLandingController;
 
 
 //Landing Page Routes
-Route::get('/', function () {
-    return view('landing.landing-page');
-})->name('home');
-
+Route::get('/', [UserLandingController::class, 'index'])->name('home');
 Route::get('/cart', function () {
     return view('landing.shopping-cart');
 })->name('cart');
+
+Route::get('/orders', [UserOrderController::class, 'index'])->name('user.orders');
 
 //Auth Routes
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');

@@ -7,6 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title') - {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 
@@ -20,10 +21,7 @@
                     <a href="/" class="flex items-center">
                         <div
                             class="h-10 w-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
+                            <i class="bi bi-shop-window text-xl text-white"></i>
                         </div>
                         <span class="ml-3 text-xl font-bold text-gray-900">Store</span>
                     </a>
@@ -58,7 +56,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
-                        <span
+                        <span id="cart-count"
                             class="absolute -top-2 -right-2 bg-emerald-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">0</span>
                     </a>
 
@@ -94,7 +92,7 @@
                                         Dashboard
                                     </a>
                                 @endif
-                                <a href="/orders"
+                                <a href="{{ route('user.orders') }}"
                                     class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-emerald-600">
                                     Orders
                                 </a>
@@ -130,10 +128,7 @@
                     <div class="flex items-center">
                         <div
                             class="h-10 w-10 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z" />
-                            </svg>
+                            <i class="bi bi-shop-window text-xl text-white"></i>
                         </div>
                         <span class="ml-3 text-xl font-bold text-gray-900">Store</span>
                     </div>
@@ -207,6 +202,7 @@
             {{ session('error') }}
         </div>
     @endif
+    @stack('scripts')
 </body>
 
 </html>
