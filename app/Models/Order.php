@@ -29,20 +29,22 @@ class Order extends Model
 
     /**
      * Generate order code
-     * Using database transaction to ensure unique code
+     * Using database transaction and timestamp to ensure unique code
      */
     public static function generateOrderCode(): string
     {
         return DB::transaction(function () {
+            $prefix = 'ORDE';
+            $timestamp = now()->format('ymdHis'); // Format: YYMMDDHHMMSS
+
             $lastOrder = DB::table('orders')
+                ->where('order_code', 'like', $prefix . $timestamp . '%')
                 ->orderBy('id', 'desc')
                 ->lockForUpdate()
                 ->first();
 
-            $lastNumber = $lastOrder ? intval(substr($lastOrder->order_code, 4)) : 0;
-            $nextNumber = $lastNumber + 1;
-
-            return 'ORDEksdajkl' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            $sequence = $lastOrder ? (intval(substr($lastOrder->order_code, -3)) + 1) : 1;
+            return $prefix . $timestamp . str_pad($sequence, 3, '0', STR_PAD_LEFT);
         });
     }
 

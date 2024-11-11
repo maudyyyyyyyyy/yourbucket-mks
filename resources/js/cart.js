@@ -385,14 +385,14 @@ class ShoppingCart {
 
 
                             // Redirect ke halaman sukses atau order detail
-                            window.location.href = `/orders/${data.order_id}`;
+                            window.location.href = `/orders`;
                         },
                         onPending: (result) => {
                             // Kirim update status ke server
                             this.updateTransactionStatus(data.order_id, result, 'pending');
                             this.items = [];
                             this.saveCartToStorage();
-                            window.location.href = `/order/${data.order_id}`;
+                            window.location.href = `/orders`;
                         },
                         onError: (result) => {
                             // Kirim update status ke server
@@ -406,7 +406,7 @@ class ShoppingCart {
                         onClose: () => {
                             const continuePayment = confirm('Apakah Anda ingin melanjutkan pembayaran?');
                             if (continuePayment) {
-                                window.location.href = `/order/${data.order_id}`;
+                                window.location.href = `/orders`;
                             } else {
                                 if (payButton) {
                                     payButton.disabled = false;
