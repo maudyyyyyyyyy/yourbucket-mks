@@ -17,7 +17,6 @@ class Order extends Model
         'total_amount',
         'status',
         'shipping_address',
-        'payment_method',
         'midtrans_transaction_id',
         'midtrans_payment_type',
         'snap_token',
@@ -43,7 +42,7 @@ class Order extends Model
             $lastNumber = $lastOrder ? intval(substr($lastOrder->order_code, 4)) : 0;
             $nextNumber = $lastNumber + 1;
 
-            return 'ORDE' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            return 'ORDEksdajkl' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
         });
     }
 

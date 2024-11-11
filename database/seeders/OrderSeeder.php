@@ -12,6 +12,16 @@ use Illuminate\Support\Facades\DB;
 
 class OrderSeeder extends Seeder
 {
+    private function generateOrderCode($date)
+    {
+        $prefix = 'ORD';
+        $dateCode = $date->format('ymd');
+        $randomStr = strtoupper(substr(str_shuffle('ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 3));
+        $sequence = sprintf('%04d', Order::whereDate('created_at', $date->format('Y-m-d'))->count() + 1);
+
+        return $prefix . $dateCode . $randomStr . $sequence;
+    }
+
     public function run(): void
     {
         // Truncate existing orders and order items
@@ -44,13 +54,13 @@ class OrderSeeder extends Seeder
 
                     $status = $statuses[array_rand($statuses)];
 
-                    // Create order
+                    // Create order with unique order code
                     $order = new Order([
+                        'order_code' => $this->generateOrderCode($orderDate),
                         'user_id' => $user->id,
                         'total_amount' => '0.00',
                         'status' => $status,
                         'shipping_address' => $user->address,
-                        'payment_method' => $paymentMethods[array_rand($paymentMethods)],
                         'midtrans_transaction_id' => 'TRX-' . rand(100000, 999999),
                         'midtrans_payment_type' => $paymentMethods[array_rand($paymentMethods)],
                         'snap_token' => 'SNAP-' . rand(100000, 999999),
@@ -69,7 +79,6 @@ class OrderSeeder extends Seeder
                     // Create order items
                     $totalAmount = '0.00';
                     $itemCount = rand(1, 3);
-                    $orderItems = [];
 
                     for ($j = 0; $j < $itemCount; $j++) {
                         $product = $products->random();

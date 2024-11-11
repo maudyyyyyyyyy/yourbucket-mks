@@ -3,8 +3,21 @@
 @section('title', 'Shopping Cart')
 
 @section('content')
+    @auth
+        <div id="userData" data-name="{{ auth()->user()->name }}" data-phone="{{ auth()->user()->phone }}"
+            data-address="{{ auth()->user()->address }}" class="hidden">
+        </div>
+    @endauth
+
     <div class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {{-- Notifications --}}
+            @if (session('warning'))
+                <div class="mb-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700">
+                    Please login first to proceed with checkout
+                </div>
+            @endif
+
             <div class="flex items-center justify-between mb-8">
                 <h1 class="text-2xl font-bold text-gray-900">Shopping Cart</h1>
                 <a href="/" class="text-emerald-600 hover:text-emerald-700 flex items-center gap-2">
@@ -19,8 +32,9 @@
             <div class="flex flex-col lg:flex-row gap-8">
                 <!-- Cart Items Container -->
                 <div class="flex-1">
-                    <div class="bg-white rounded-xl shadow-sm overflow-hidden cart-items">
-
+                    <div class="bg-white rounded-xl shadow-sm overflow-hidden cart-items"
+                        data-logged-in="{{ auth()->check() ? 'true' : 'false' }}">
+                        <!-- Cart items will be populated by JavaScript -->
                     </div>
                 </div>
 
@@ -43,10 +57,21 @@
                             </div>
                         </dl>
 
-                        <button data-action="checkout"
-                            class="mt-6 w-full bg-gray-300 cursor-not-allowed text-white py-3 px-4 rounded-lg">
-                            Proceed to Checkout
-                        </button>
+                        @if (auth()->check())
+                            <button data-action="checkout"
+                                class="mt-6 w-full bg-gray-300 cursor-not-allowed text-white py-3 px-4 rounded-lg">
+                                Proceed to Checkout
+                            </button>
+                            <button id="payButton"
+                                class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg hidden">
+                                Pay Now
+                            </button>
+                        @else
+                            <a href="{{ route('login') }}"
+                                class="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 px-4 rounded-lg text-center block">
+                                Login to Checkout
+                            </a>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -55,5 +80,6 @@
 @endsection
 
 @push('scripts')
-    <script type="module" src="{{ asset('js/app.js') }}"></script>
+    <script src="{{ config('midtrans.payment_url') }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+    <script src="{{ asset('js/app.js') }}"></script>
 @endpush

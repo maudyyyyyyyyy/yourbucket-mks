@@ -157,7 +157,6 @@ class ShoppingCart {
     }
 
     attachItemEventListeners(element, productId) {
-        // Decrease quantity button
         const decreaseBtn = element.querySelector('[data-action="decrease"]');
         if (decreaseBtn) {
             decreaseBtn.addEventListener('click', (e) => {
@@ -166,7 +165,6 @@ class ShoppingCart {
             });
         }
 
-        // Increase quantity button
         const increaseBtn = element.querySelector('[data-action="increase"]');
         if (increaseBtn) {
             increaseBtn.addEventListener('click', (e) => {
@@ -175,7 +173,6 @@ class ShoppingCart {
             });
         }
 
-        // Remove item button
         const removeBtn = element.querySelector('[data-action="remove"]');
         if (removeBtn) {
             removeBtn.addEventListener('click', (e) => {
@@ -204,14 +201,76 @@ class ShoppingCart {
             return;
         }
 
+        const cartContent = document.createElement('div');
+        cartContent.className = 'cart-content';
+
+        // Cart items
         this.items.forEach(item => {
             const itemElement = this.createCartItemElement(item);
-            cartContainer.appendChild(itemElement);
+            cartContent.appendChild(itemElement);
         });
+
+        // Shipping form for logged-in users
+        if (document.querySelector('[data-logged-in="true"]')) {
+            const shippingForm = this.createShippingForm();
+            shippingForm.classList.add('hidden');
+            cartContent.appendChild(shippingForm);
+        }
+
+        cartContainer.appendChild(cartContent);
 
         const subtotal = this.calculateSubtotal();
         const shipping = subtotal > 0 ? 20000 : 0;
         this.updateOrderSummary(subtotal, shipping);
+    }
+
+    createShippingForm() {
+        const div = document.createElement('div');
+        div.id = 'shippingForm';
+        div.className = 'p-6 border-t border-gray-200 mt-4';
+
+        // Ambil data user dari elemen yang disembunyikan di HTML
+        const userData = document.getElementById('userData');
+        const name = userData ? userData.dataset.name : '';
+        const phone = userData ? userData.dataset.phone : '';
+        const address = userData ? userData.dataset.address : '';
+
+        div.innerHTML = `
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Shipping Information</h2>
+            <form id="checkoutForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                    <input type="text" 
+                           name="name" 
+                           value="${name}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
+                           required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="tel" 
+                           name="phone" 
+                           value="${phone}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
+                           required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
+                    <textarea name="shipping_address" 
+                              rows="3" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
+                              required>${address}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Order Notes (Optional)</label>
+                    <textarea name="notes" 
+                              rows="2" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
+                              placeholder="Any special instructions for delivery"></textarea>
+                </div>
+            </form>
+        `;
+        return div;
     }
 
     updateOrderSummary(subtotal, shipping) {
@@ -235,7 +294,6 @@ class ShoppingCart {
     }
 
     attachEventListeners() {
-        // Event delegation untuk tombol "Add to Cart"
         document.addEventListener('click', (e) => {
             const addToCartButton = e.target.closest('.add-to-cart');
             if (addToCartButton) {
@@ -254,21 +312,160 @@ class ShoppingCart {
             }
         });
 
-        // Event listener untuk tombol checkout
         const checkoutButton = document.querySelector('[data-action="checkout"]');
         if (checkoutButton) {
             checkoutButton.addEventListener('click', (e) => {
                 e.preventDefault();
                 if (this.items.length > 0) {
-                    window.location.href = '/checkout';
+                    const shippingForm = document.getElementById('shippingForm');
+                    if (shippingForm) {
+                        shippingForm.classList.remove('hidden');
+                        checkoutButton.classList.add('hidden');
+                        const payButton = document.getElementById('payButton');
+                        if (payButton) payButton.classList.remove('hidden');
+                    }
                 }
+            });
+        }
+
+        const payButton = document.getElementById('payButton');
+        if (payButton) {
+            payButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.processPayment();
             });
         }
     }
 
-    showNotification(message) {
+    processPayment() {
+        const form = document.getElementById('checkoutForm');
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const formData = new FormData(form);
+        const payButton = document.getElementById('payButton');
+
+        if (payButton) {
+            payButton.disabled = true;
+            payButton.textContent = 'Processing...';
+        }
+
+        fetch('/checkout/process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                name: formData.get('name'),
+                phone: formData.get('phone'),
+                shipping_address: formData.get('shipping_address'),
+                notes: formData.get('notes'),
+                cart: this.items
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => Promise.reject(err));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success' && data.snap_token) {
+                    window.snap.pay(data.snap_token, {
+                        onSuccess: (result) => {
+                            // Kirim update status ke server
+                            this.updateTransactionStatus(data.order_id, result, 'paid');
+                            this.items = [];
+                            this.saveCartToStorage();
+
+
+                            // Redirect ke halaman sukses atau order detail
+                            window.location.href = `/orders/${data.order_id}`;
+                        },
+                        onPending: (result) => {
+                            // Kirim update status ke server
+                            this.updateTransactionStatus(data.order_id, result, 'pending');
+                            this.items = [];
+                            this.saveCartToStorage();
+                            window.location.href = `/order/${data.order_id}`;
+                        },
+                        onError: (result) => {
+                            // Kirim update status ke server
+                            this.updateTransactionStatus(data.order_id, result, 'cancelled');
+                            this.showNotification('Pembayaran gagal. Silakan coba lagi.', 'error');
+                            if (payButton) {
+                                payButton.disabled = false;
+                                payButton.textContent = 'Pay Now';
+                            }
+                        },
+                        onClose: () => {
+                            const continuePayment = confirm('Apakah Anda ingin melanjutkan pembayaran?');
+                            if (continuePayment) {
+                                window.location.href = `/order/${data.order_id}`;
+                            } else {
+                                if (payButton) {
+                                    payButton.disabled = false;
+                                    payButton.textContent = 'Pay Now';
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    throw new Error(data.message || 'Something went wrong');
+                }
+            })
+            .catch(error => {
+                console.error('Payment error:', error);
+                this.showNotification('Error processing payment: ' + (error.message || 'Something went wrong'), 'error');
+                if (payButton) {
+                    payButton.disabled = false;
+                    payButton.textContent = 'Pay Now';
+                }
+            });
+    }
+
+    async updateTransactionStatus(orderId, result, status) {
+        try {
+            const response = await fetch('/payments/update-status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    order_id: orderId,
+                    transaction_id: result.transaction_id,
+                    payment_type: result.payment_type,
+                    status: status
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to update transaction status');
+            }
+
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                console.log('Transaction status updated successfully');
+            } else {
+                console.error('Failed to update transaction status:', data.message);
+            }
+        } catch (error) {
+            console.error('Error updating transaction status:', error);
+        }
+    }
+
+    showNotification(message, type = 'success') {
         const notification = document.createElement('div');
-        notification.className = 'fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-y-0 z-50';
+        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-y-0 z-50 ${type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
+            }`;
         notification.textContent = message;
 
         document.body.appendChild(notification);

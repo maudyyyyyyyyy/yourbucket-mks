@@ -68,7 +68,7 @@
                                             {{ ucfirst($order->status) }}
                                         </span>
                                     </td>
-                                    <td>{{ $order->payment_method }}</td>
+                                    <td>{{ $order->midtrans_payment_type }}</td>
                                     <td>{{ $order->created_at->format('d M Y H:i') }}</td>
                                     <td>
                                         <button type="button" class="btn btn-sm btn-info me-1" data-bs-toggle="modal"
@@ -198,11 +198,6 @@
                                             <i class="bi bi-credit-card me-2"></i>Payment Information
                                         </h6>
                                         <div class="row g-3">
-                                            <div class="col-md-4">
-                                                <label class="text-muted small">Payment Method</label>
-                                                <p class="mb-0 fw-medium">
-                                                    {{ ucwords(str_replace('_', ' ', $order->payment_method)) }}</p>
-                                            </div>
                                             @if ($order->midtrans_transaction_id)
                                                 <div class="col-md-4">
                                                     <label class="text-muted small">Transaction ID</label>

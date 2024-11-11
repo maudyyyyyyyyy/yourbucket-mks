@@ -24,7 +24,6 @@ return new class extends Migration {
                 'cancelled'
             ])->default('pending');
             $table->text('shipping_address');
-            $table->string('payment_method')->nullable();
             $table->string('midtrans_transaction_id')->nullable();
             $table->string('midtrans_payment_type')->nullable();
             $table->string('snap_token')->nullable();

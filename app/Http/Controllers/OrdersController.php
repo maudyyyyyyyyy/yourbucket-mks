@@ -12,10 +12,10 @@ class OrdersController extends Controller
     {
         $orders = Order::query()
             ->with(['user', 'items.product'])
-            ->whereIn('status', ['processing', 'shipped'])
+            ->whereIn('status', ['paid', 'processing', 'shipped'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('order_code', 'like', "%{$search}%")
+                    $q->where('id', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($q) use ($search) {
                             $q->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%");
@@ -25,7 +25,7 @@ class OrdersController extends Controller
                 });
             })
             ->when($request->status, function ($query, $status) {
-                if (in_array($status, ['processing', 'shipped'])) {
+                if (in_array($status, ['paid', 'processing', 'shipped'])) {
                     $query->where('status', $status);
                 }
             })
