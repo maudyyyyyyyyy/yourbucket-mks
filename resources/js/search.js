@@ -1,103 +1,92 @@
-document.addEventListener('DOMContentLoaded', function () {
-    const searchInput = document.getElementById('searchInput');
-    const productsSection = document.querySelector('.products-section');
-    const productCards = document.querySelectorAll('.product-card');
-    const noResults = document.getElementById('noResults');
-    const heroSection = document.getElementById('hero-section');
-    const newsletterSection = document.querySelector('.bg-emerald-50');
-    let debounceTimer;
+document.addEventListener('DOMContentLoaded', () => {
+    const elements = {
+        search: document.getElementById('searchInput'),
+        products: document.querySelector('.products-section'),
+        cards: Array.from(document.querySelectorAll('.product-card')),
+        noResults: document.getElementById('noResults'),
+        hero: document.getElementById('hero-section'),
+        newsletter: document.querySelector('.bg-emerald-50')
+    };
 
-    function initializeProductSearch() {
-        if (!searchInput) return;
-
-        searchInput.addEventListener('input', function (e) {
-            clearTimeout(debounceTimer);
-
-            debounceTimer = setTimeout(() => {
-                const searchTerm = e.target.value.toLowerCase().trim();
-                handleSearch(searchTerm);
-            }, 300);
-        });
-    }
-
-    function handleSearch(searchTerm) {
-        if (searchTerm === '') {
-            resetView();
-            return;
+    class ProductSearch {
+        constructor(elements) {
+            this.elements = elements;
+            this.debounceTimer = null;
+            this.init();
         }
 
+        init() {
+            if (!this.elements.search) return;
 
-        if (heroSection) heroSection.classList.add('hidden');
-        if (newsletterSection) newsletterSection.classList.add('hidden');
+            this.elements.search.addEventListener('input',
+                this.debounce(e => this.handleSearch(e.target.value.toLowerCase().trim()))
+            );
+        }
 
-        let foundAny = false;
-        const relevanceMap = new Map();
+        debounce(fn, delay = 300) {
+            return (...args) => {
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => fn(...args), delay);
+            };
+        }
 
-
-        productCards.forEach(card => {
-            const productName = card.querySelector('.product-name')?.textContent.toLowerCase() || '';
-            const productDesc = card.querySelector('.product-description')?.textContent.toLowerCase() || '';
-
-            let relevanceScore = calculateRelevance(searchTerm, productName, productDesc);
-
-            if (relevanceScore > 0) {
-                card.classList.remove('hidden');
-                relevanceMap.set(card, relevanceScore);
-                foundAny = true;
-            } else {
-                card.classList.add('hidden');
+        handleSearch(searchTerm) {
+            if (!searchTerm) {
+                this.resetView();
+                return;
             }
-        });
 
-        updateProductDisplay(foundAny, relevanceMap);
-    }
-
-    function calculateRelevance(searchTerm, productName, productDesc) {
-        let score = 0;
-
-
-        if (productName.includes(searchTerm)) score += 3;
-
-
-        searchTerm.split(' ').forEach(term => {
-            if (productName.includes(term)) score += 2;
-        });
-
-
-        if (productDesc.includes(searchTerm)) score += 1;
-
-        return score;
-    }
-
-    function updateProductDisplay(foundAny, relevanceMap) {
-        if (!foundAny) {
-            if (noResults) noResults.classList.remove('hidden');
-            return;
+            this.toggleSections(true);
+            const searchResults = this.getSearchResults(searchTerm);
+            this.updateDisplay(searchResults);
         }
 
-        if (noResults) noResults.classList.add('hidden');
+        getSearchResults(searchTerm) {
+            return this.elements.cards
+                .map(card => ({
+                    card,
+                    score: this.calculateRelevance(
+                        searchTerm,
+                        card.querySelector('.product-name')?.textContent.toLowerCase() || '',
+                        card.querySelector('.product-description')?.textContent.toLowerCase() || ''
+                    )
+                }))
+                .filter(item => item.score > 0)
+                .sort((a, b) => b.score - a.score);
+        }
 
+        calculateRelevance(searchTerm, name, description) {
+            const terms = searchTerm.split(' ');
+            return (name.includes(searchTerm) ? 3 : 0) +
+                (terms.filter(term => name.includes(term)).length * 2) +
+                (description.includes(searchTerm) ? 1 : 0);
+        }
 
-        const productsContainer = productCards[0].parentElement;
-        const sortedCards = Array.from(relevanceMap.entries())
-            .sort((a, b) => b[1] - a[1])
-            .map(entry => entry[0]);
+        updateDisplay(results) {
+            const hasResults = results.length > 0;
+            this.elements.noResults?.classList.toggle('hidden', hasResults);
 
-        sortedCards.forEach(card => productsContainer.appendChild(card));
+            if (!hasResults) return;
+
+            const container = this.elements.cards[0].parentElement;
+            results.forEach(({ card }) => container.appendChild(card));
+            this.elements.cards
+                .filter(card => !results.find(r => r.card === card))
+                .forEach(card => card.classList.add('hidden'));
+        }
+
+        toggleSections(hide) {
+            [this.elements.hero, this.elements.newsletter].forEach(section =>
+                section?.classList.toggle('hidden', hide)
+            );
+        }
+
+        resetView() {
+            this.toggleSections(false);
+            this.elements.cards.forEach(card => card.classList.remove('hidden'));
+            this.elements.noResults?.classList.add('hidden');
+        }
     }
 
-    function resetView() {
-
-        if (heroSection) heroSection.classList.remove('hidden');
-        if (newsletterSection) newsletterSection.classList.remove('hidden');
-
-
-        productCards.forEach(card => card.classList.remove('hidden'));
-
-
-        if (noResults) noResults.classList.add('hidden');
-    }
-
-
-    initializeProductSearch();
+    new ProductSearch(elements);
 });
