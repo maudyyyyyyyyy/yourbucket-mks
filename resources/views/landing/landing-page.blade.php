@@ -32,93 +32,98 @@
 
     <!-- Products Section -->
     <div id="featured-products" class="products-section bg-white py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="mb-8">
-                <h2 class="text-2xl font-bold text-gray-900 mb-4">Featured Products</h2>
+        <div id="products" class="products-section bg-white py-12">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-bold text-gray-900 mb-4">Featured Products</h2>
 
-                <!-- Search and Filter -->
-                <form action="{{ route('home') }}" method="GET" class="flex flex-wrap gap-4">
-                    <!-- Search Input -->
-                    <div class="flex-1 min-w-[200px]">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Search products..."
-                            class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
-                    </div>
+                    <!-- Search and Filter -->
+                    <form action="{{ route('home') }}" method="GET" class="flex flex-wrap gap-4">
+                        <!-- Search Input -->
+                        <div class="flex-1 min-w-[200px]">
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                placeholder="Search products..."
+                                class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
+                        </div>
 
-                    <!-- Category Filter -->
-                    <div class="w-full sm:w-auto">
-                        <select name="category"
-                            class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
-                            <option value="">All Categories</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}"
-                                    {{ request('category') == $category->id ? 'selected' : '' }}>
-                                    {{ $category->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                        <!-- Category Filter -->
+                        <div class="w-full sm:w-auto">
+                            <select name="category"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
+                                <option value="">All Categories</option>
+                                @foreach ($categories as $category)
+                                    <option value="{{ $category->id }}"
+                                        {{ request('category') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                    <!-- Sort Filter -->
-                    <div class="w-full sm:w-auto">
-                        <select name="sort"
-                            class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
-                            <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest</option>
-                            <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low to
-                                High</option>
-                            <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price: High
-                                to Low</option>
-                        </select>
-                    </div>
+                        <!-- Sort Filter -->
+                        <div class="w-full sm:w-auto">
+                            <select name="sort"
+                                class="w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200">
+                                <option value="newest" {{ request('sort') == 'newest' ? 'selected' : '' }}>Newest</option>
+                                <option value="price_low" {{ request('sort') == 'price_low' ? 'selected' : '' }}>Price: Low
+                                    to
+                                    High</option>
+                                <option value="price_high" {{ request('sort') == 'price_high' ? 'selected' : '' }}>Price:
+                                    High
+                                    to Low</option>
+                            </select>
+                        </div>
 
-                    <!-- Apply Filter Button -->
-                    <div class="w-full sm:w-auto">
-                        <button type="submit"
-                            class="w-full px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                            Apply Filters
-                        </button>
-                    </div>
-                </form>
-            </div>
+                        <!-- Apply Filter Button -->
+                        <div class="w-full sm:w-auto">
+                            <button type="submit"
+                                class="w-full px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                                Apply Filters
+                            </button>
+                        </div>
+                    </form>
+                </div>
 
-            <!-- Products Grid -->
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-                @forelse ($products as $product)
-                    <div class="product-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
-                        data-id="{{ $product->id }}" data-name="{{ $product->name }}" data-price="{{ $product->price }}"
-                        data-image="{{ $product->getPrimaryImage() }}" data-category="{{ $product->category->name }}">
-                        <img src="{{ $product->getPrimaryImage() }}" alt="{{ $product->name }}"
-                            class="w-full h-72 object-cover">
-                        <div class="p-4">
-                            <h3 class="product-name text-lg font-medium text-gray-900">{{ $product->name }}</h3>
-                            <p class="product-description mt-1 text-sm text-gray-500">
-                                {{ Str::limit($product->description, 100) }}
-                            </p>
-                            <div class="mt-4 flex items-center justify-between">
-                                <p class="text-lg font-semibold text-emerald-600">{{ $product->formatted_price }}</p>
-                                <button
-                                    class="add-to-cart px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
-                                    Add to Cart
-                                </button>
+                <!-- Products Grid -->
+                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                    @forelse ($products as $product)
+                        <div class="product-card bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+                            data-id="{{ $product->id }}" data-name="{{ $product->name }}"
+                            data-price="{{ $product->price }}" data-image="{{ $product->getPrimaryImage() }}"
+                            data-category="{{ $product->category->name }}">
+                            <img src="{{ $product->getPrimaryImage() }}" alt="{{ $product->name }}"
+                                class="w-full h-72 object-cover">
+                            <div class="p-4">
+                                <h3 class="product-name text-lg font-medium text-gray-900">{{ $product->name }}</h3>
+                                <p class="product-description mt-1 text-sm text-gray-500">
+                                    {{ Str::limit($product->description, 100) }}
+                                </p>
+                                <div class="mt-4 flex items-center justify-between">
+                                    <p class="text-lg font-semibold text-emerald-600">{{ $product->formatted_price }}</p>
+                                    <button
+                                        class="add-to-cart px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors">
+                                        Add to Cart
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                @empty
-                    <div class="col-span-full text-center py-12">
-                        <h3 class="text-lg font-medium text-gray-900">No products found</h3>
-                        <p class="mt-2 text-gray-500">Try adjusting your search or filter</p>
-                    </div>
-                @endforelse
-            </div>
-
-            <!-- Pagination -->
-            @if ($products->hasPages())
-                <div class="mt-6">
-                    <nav class="flex items-center justify-center flex-wrap gap-2">
-                        {{ $products->links() }}
-                    </nav>
+                    @empty
+                        <div class="col-span-full text-center py-12">
+                            <h3 class="text-lg font-medium text-gray-900">No products found</h3>
+                            <p class="mt-2 text-gray-500">Try adjusting your search or filter</p>
+                        </div>
+                    @endforelse
                 </div>
-            @endif
+
+                <!-- Pagination -->
+                @if ($products->hasPages())
+                    <div class="mt-6">
+                        <nav class="flex items-center justify-center flex-wrap gap-2">
+                            {{ $products->links() }}
+                        </nav>
+                    </div>
+                @endif
+            </div>
         </div>
     </div>
 

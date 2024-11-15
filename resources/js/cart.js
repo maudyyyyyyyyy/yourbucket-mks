@@ -1,7 +1,7 @@
 class ShoppingCart {
     constructor() {
-        console.log('ShoppingCart: Initializing...');
         this.items = this.getCartFromStorage();
+        this.SHIPPING_COST = 20000;
         this.init();
     }
 
@@ -15,10 +15,9 @@ class ShoppingCart {
 
     getCartFromStorage() {
         try {
-            const cart = localStorage.getItem('shopping_cart');
-            return cart ? JSON.parse(cart) : [];
-        } catch (error) {
-            console.error('Error getting cart from storage:', error);
+            return JSON.parse(localStorage.getItem('shopping_cart')) || [];
+        } catch {
+            console.error('Error reading cart from storage');
             return [];
         }
     }
@@ -28,20 +27,23 @@ class ShoppingCart {
             localStorage.setItem('shopping_cart', JSON.stringify(this.items));
             this.updateCartCount();
         } catch (error) {
-            console.error('Error saving cart to storage:', error);
+            console.error('Error saving cart:', error);
+            this.showNotification('Gagal menyimpan keranjang', 'error');
         }
     }
 
     updateCartCount() {
         const cartCount = document.getElementById('cart-count');
-        if (cartCount) {
-            const totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
-            cartCount.textContent = totalItems;
-            cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
-        }
+        if (!cartCount) return;
+
+        const totalItems = this.items.reduce((sum, item) => sum + item.quantity, 0);
+        cartCount.textContent = totalItems;
+        cartCount.style.display = totalItems > 0 ? 'flex' : 'none';
     }
 
     addItem(product) {
+        if (!product?.id) return;
+
         try {
             const existingItem = this.items.find(item => item.id === parseInt(product.id));
 
@@ -63,43 +65,40 @@ class ShoppingCart {
             this.showNotification('Produk berhasil ditambahkan ke keranjang');
         } catch (error) {
             console.error('Error adding item:', error);
+            this.showNotification('Gagal menambahkan produk', 'error');
         }
     }
 
     removeItem(productId) {
         try {
-            productId = parseInt(productId);
-            this.items = this.items.filter(item => item.id !== productId);
+            this.items = this.items.filter(item => item.id !== parseInt(productId));
             this.saveCartToStorage();
             this.updateCartUI();
             this.showNotification('Produk berhasil dihapus dari keranjang');
         } catch (error) {
             console.error('Error removing item:', error);
+            this.showNotification('Gagal menghapus produk', 'error');
         }
     }
 
     updateQuantity(productId, changeAmount) {
         try {
-            productId = parseInt(productId);
-            const item = this.items.find(item => item.id === productId);
+            const item = this.items.find(item => item.id === parseInt(productId));
+            if (!item) return;
 
-            if (item) {
-                const newQuantity = item.quantity + changeAmount;
-                if (newQuantity < 1) {
-                    this.removeItem(productId);
-                } else {
-                    item.quantity = newQuantity;
-                    this.saveCartToStorage();
-                    this.updateCartUI();
-                }
+            const newQuantity = item.quantity + changeAmount;
+            if (newQuantity < 1) {
+                this.removeItem(productId);
+                return;
             }
+
+            item.quantity = newQuantity;
+            this.saveCartToStorage();
+            this.updateCartUI();
         } catch (error) {
             console.error('Error updating quantity:', error);
+            this.showNotification('Gagal mengubah jumlah produk', 'error');
         }
-    }
-
-    calculateSubtotal() {
-        return this.items.reduce((total, item) => total + (parseFloat(item.price) * item.quantity), 0);
     }
 
     formatPrice(price) {
@@ -109,6 +108,32 @@ class ShoppingCart {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         }).format(price);
+    }
+
+    calculateSubtotal() {
+        return this.items.reduce((total, item) =>
+            total + (parseFloat(item.price) * item.quantity), 0);
+    }
+
+    updateOrderSummary(subtotal, shipping) {
+        const elements = {
+            subtotal: document.querySelector('[data-summary="subtotal"]'),
+            shipping: document.querySelector('[data-summary="shipping"]'),
+            total: document.querySelector('[data-summary="total"]'),
+            checkout: document.querySelector('[data-action="checkout"]')
+        };
+
+        if (elements.subtotal) elements.subtotal.textContent = this.formatPrice(subtotal);
+        if (elements.shipping) elements.shipping.textContent = this.formatPrice(shipping);
+        if (elements.total) elements.total.textContent = this.formatPrice(subtotal + shipping);
+
+        if (elements.checkout) {
+            const isDisabled = subtotal === 0;
+            elements.checkout.disabled = isDisabled;
+            elements.checkout.className = isDisabled
+                ? 'mt-6 w-full bg-gray-300 cursor-not-allowed text-white py-3 px-4 rounded-lg'
+                : 'mt-6 w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700';
+        }
     }
 
     createCartItemElement(item) {
@@ -123,14 +148,14 @@ class ShoppingCart {
                     <p class="mt-1 text-sm text-gray-500">${item.category}</p>
                     <div class="mt-2 flex items-center justify-between">
                         <div class="flex items-center space-x-2">
-                            <button type="button" class="quantity-btn decrease-quantity p-1 rounded-md hover:bg-gray-100" 
+                            <button type="button" class="quantity-btn p-1 rounded-md hover:bg-gray-100" 
                                     data-action="decrease" data-product-id="${item.id}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
                                 </svg>
                             </button>
-                            <span class="text-gray-600 quantity-display">${item.quantity}</span>
-                            <button type="button" class="quantity-btn increase-quantity p-1 rounded-md hover:bg-gray-100"
+                            <span class="text-gray-600">${item.quantity}</span>
+                            <button type="button" class="quantity-btn p-1 rounded-md hover:bg-gray-100"
                                     data-action="increase" data-product-id="${item.id}">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12m-8-6h16"/>
@@ -156,32 +181,6 @@ class ShoppingCart {
         return div;
     }
 
-    attachItemEventListeners(element, productId) {
-        const decreaseBtn = element.querySelector('[data-action="decrease"]');
-        if (decreaseBtn) {
-            decreaseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.updateQuantity(productId, -1);
-            });
-        }
-
-        const increaseBtn = element.querySelector('[data-action="increase"]');
-        if (increaseBtn) {
-            increaseBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.updateQuantity(productId, 1);
-            });
-        }
-
-        const removeBtn = element.querySelector('[data-action="remove"]');
-        if (removeBtn) {
-            removeBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.removeItem(productId);
-            });
-        }
-    }
-
     updateCartUI() {
         const cartContainer = document.querySelector('.cart-items');
         if (!cartContainer) return;
@@ -204,13 +203,10 @@ class ShoppingCart {
         const cartContent = document.createElement('div');
         cartContent.className = 'cart-content';
 
-        // Cart items
         this.items.forEach(item => {
-            const itemElement = this.createCartItemElement(item);
-            cartContent.appendChild(itemElement);
+            cartContent.appendChild(this.createCartItemElement(item));
         });
 
-        // Shipping form for logged-in users
         if (document.querySelector('[data-logged-in="true"]')) {
             const shippingForm = this.createShippingForm();
             shippingForm.classList.add('hidden');
@@ -220,111 +216,63 @@ class ShoppingCart {
         cartContainer.appendChild(cartContent);
 
         const subtotal = this.calculateSubtotal();
-        const shipping = subtotal > 0 ? 20000 : 0;
-        this.updateOrderSummary(subtotal, shipping);
+        this.updateOrderSummary(subtotal, this.SHIPPING_COST);
     }
 
-    createShippingForm() {
-        const div = document.createElement('div');
-        div.id = 'shippingForm';
-        div.className = 'p-6 border-t border-gray-200 mt-4';
+    attachItemEventListeners(element, productId) {
+        element.addEventListener('click', (e) => {
+            const target = e.target.closest('[data-action]');
+            if (!target) return;
 
-        // Ambil data user dari elemen yang disembunyikan di HTML
-        const userData = document.getElementById('userData');
-        const name = userData ? userData.dataset.name : '';
-        const phone = userData ? userData.dataset.phone : '';
-        const address = userData ? userData.dataset.address : '';
+            e.preventDefault();
+            const action = target.dataset.action;
 
-        div.innerHTML = `
-            <h2 class="text-lg font-medium text-gray-900 mb-4">Shipping Information</h2>
-            <form id="checkoutForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Full Name</label>
-                    <input type="text" 
-                           name="name" 
-                           value="${name}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
-                           required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <input type="tel" 
-                           name="phone" 
-                           value="${phone}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
-                           required>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Shipping Address</label>
-                    <textarea name="shipping_address" 
-                              rows="3" 
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
-                              required>${address}</textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Order Notes (Optional)</label>
-                    <textarea name="notes" 
-                              rows="2" 
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-500 focus:ring-emerald-500" 
-                              placeholder="Any special instructions for delivery"></textarea>
-                </div>
-            </form>
-        `;
-        return div;
-    }
-
-    updateOrderSummary(subtotal, shipping) {
-        const elements = {
-            subtotal: document.querySelector('[data-summary="subtotal"]'),
-            shipping: document.querySelector('[data-summary="shipping"]'),
-            total: document.querySelector('[data-summary="total"]'),
-            checkout: document.querySelector('[data-action="checkout"]')
-        };
-
-        if (elements.subtotal) elements.subtotal.textContent = this.formatPrice(subtotal);
-        if (elements.shipping) elements.shipping.textContent = this.formatPrice(shipping);
-        if (elements.total) elements.total.textContent = this.formatPrice(subtotal + shipping);
-
-        if (elements.checkout) {
-            elements.checkout.disabled = subtotal === 0;
-            elements.checkout.className = subtotal === 0
-                ? 'mt-6 w-full bg-gray-300 cursor-not-allowed text-white py-3 px-4 rounded-lg'
-                : 'mt-6 w-full bg-emerald-600 text-white py-3 px-4 rounded-lg hover:bg-emerald-700';
-        }
+            switch (action) {
+                case 'decrease':
+                    this.updateQuantity(productId, -1);
+                    break;
+                case 'increase':
+                    this.updateQuantity(productId, 1);
+                    break;
+                case 'remove':
+                    this.removeItem(productId);
+                    break;
+            }
+        });
     }
 
     attachEventListeners() {
         document.addEventListener('click', (e) => {
             const addToCartButton = e.target.closest('.add-to-cart');
-            if (addToCartButton) {
-                e.preventDefault();
-                const productCard = addToCartButton.closest('.product-card');
-                if (productCard) {
-                    const product = {
-                        id: productCard.dataset.id,
-                        name: productCard.dataset.name,
-                        price: productCard.dataset.price,
-                        image: productCard.dataset.image,
-                        category_name: productCard.dataset.category
-                    };
-                    this.addItem(product);
-                }
-            }
+            if (!addToCartButton) return;
+
+            e.preventDefault();
+            const productCard = addToCartButton.closest('.product-card');
+            if (!productCard) return;
+
+            const product = {
+                id: productCard.dataset.id,
+                name: productCard.dataset.name,
+                price: productCard.dataset.price,
+                image: productCard.dataset.image,
+                category_name: productCard.dataset.category
+            };
+            this.addItem(product);
         });
 
         const checkoutButton = document.querySelector('[data-action="checkout"]');
         if (checkoutButton) {
             checkoutButton.addEventListener('click', (e) => {
                 e.preventDefault();
-                if (this.items.length > 0) {
-                    const shippingForm = document.getElementById('shippingForm');
-                    if (shippingForm) {
-                        shippingForm.classList.remove('hidden');
-                        checkoutButton.classList.add('hidden');
-                        const payButton = document.getElementById('payButton');
-                        if (payButton) payButton.classList.remove('hidden');
-                    }
-                }
+                if (this.items.length === 0) return;
+
+                const shippingForm = document.getElementById('shippingForm');
+                if (!shippingForm) return;
+
+                shippingForm.classList.remove('hidden');
+                checkoutButton.classList.add('hidden');
+                const payButton = document.getElementById('payButton');
+                if (payButton) payButton.classList.remove('hidden');
             });
         }
 
@@ -337,96 +285,89 @@ class ShoppingCart {
         }
     }
 
-    processPayment() {
+    async processPayment() {
         const form = document.getElementById('checkoutForm');
-
-        if (!form.checkValidity()) {
-            form.reportValidity();
+        if (!form || !form.checkValidity()) {
+            form?.reportValidity();
             return;
         }
 
         const formData = new FormData(form);
         const payButton = document.getElementById('payButton');
-
         if (payButton) {
             payButton.disabled = true;
             payButton.textContent = 'Processing...';
         }
 
-        fetch('/checkout/process', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        try {
+            const response = await fetch('/checkout/process', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
+                },
+                body: JSON.stringify({
+                    name: formData.get('name'),
+                    phone: formData.get('phone'),
+                    shipping_address: formData.get('shipping_address'),
+                    notes: formData.get('notes'),
+                    cart: this.items
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Payment processing failed');
+            }
+
+            const data = await response.json();
+            if (!data.status === 'success' || !data.snap_token) {
+                throw new Error(data.message || 'Invalid payment response');
+            }
+
+            this.handlePayment(data.snap_token, data.order_id, payButton);
+        } catch (error) {
+            console.error('Payment error:', error);
+            this.showNotification(error.message || 'Gagal memproses pembayaran', 'error');
+            if (payButton) {
+                payButton.disabled = false;
+                payButton.textContent = 'Pay Now';
+            }
+        }
+    }
+
+    handlePayment(snapToken, orderId, payButton) {
+        window.snap.pay(snapToken, {
+            onSuccess: async (result) => {
+                await this.updateTransactionStatus(orderId, result, 'paid');
+                this.items = [];
+                this.saveCartToStorage();
+                window.location.href = '/orders';
             },
-            body: JSON.stringify({
-                name: formData.get('name'),
-                phone: formData.get('phone'),
-                shipping_address: formData.get('shipping_address'),
-                notes: formData.get('notes'),
-                cart: this.items
-            })
-        })
-            .then(response => {
-                if (!response.ok) {
-                    return response.json().then(err => Promise.reject(err));
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success' && data.snap_token) {
-                    window.snap.pay(data.snap_token, {
-                        onSuccess: (result) => {
-                            // Kirim update status ke server
-                            this.updateTransactionStatus(data.order_id, result, 'paid');
-                            this.items = [];
-                            this.saveCartToStorage();
-
-
-                            // Redirect ke halaman sukses atau order detail
-                            window.location.href = `/orders`;
-                        },
-                        onPending: (result) => {
-                            // Kirim update status ke server
-                            this.updateTransactionStatus(data.order_id, result, 'pending');
-                            this.items = [];
-                            this.saveCartToStorage();
-                            window.location.href = `/orders`;
-                        },
-                        onError: (result) => {
-                            // Kirim update status ke server
-                            this.updateTransactionStatus(data.order_id, result, 'cancelled');
-                            this.showNotification('Pembayaran gagal. Silakan coba lagi.', 'error');
-                            if (payButton) {
-                                payButton.disabled = false;
-                                payButton.textContent = 'Pay Now';
-                            }
-                        },
-                        onClose: () => {
-                            const continuePayment = confirm('Apakah Anda ingin melanjutkan pembayaran?');
-                            if (continuePayment) {
-                                window.location.href = `/orders`;
-                            } else {
-                                if (payButton) {
-                                    payButton.disabled = false;
-                                    payButton.textContent = 'Pay Now';
-                                }
-                            }
-                        }
-                    });
-                } else {
-                    throw new Error(data.message || 'Something went wrong');
-                }
-            })
-            .catch(error => {
-                console.error('Payment error:', error);
-                this.showNotification('Error processing payment: ' + (error.message || 'Something went wrong'), 'error');
+            onPending: async (result) => {
+                await this.updateTransactionStatus(orderId, result, 'pending');
+                this.items = [];
+                this.saveCartToStorage();
+                window.location.href = '/orders';
+            },
+            onError: async (result) => {
+                await this.updateTransactionStatus(orderId, result, 'cancelled');
+                this.showNotification('Pembayaran gagal', 'error');
                 if (payButton) {
                     payButton.disabled = false;
                     payButton.textContent = 'Pay Now';
                 }
-            });
+            },
+            onClose: () => {
+                if (confirm('Apakah Anda ingin melanjutkan pembayaran?')) {
+                    window.location.href = '/orders';
+                } else if (payButton) {
+                    payButton.disabled = false;
+                    payButton.textContent = 'Pay Now';
+                }
+            }
+        });
     }
 
     async updateTransactionStatus(orderId, result, status) {
@@ -436,13 +377,13 @@ class ShoppingCart {
                 headers: {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
                 },
                 body: JSON.stringify({
                     order_id: orderId,
                     transaction_id: result.transaction_id,
                     payment_type: result.payment_type,
-                    status: status
+                    status
                 })
             });
 
@@ -451,21 +392,64 @@ class ShoppingCart {
             }
 
             const data = await response.json();
-
-            if (data.status === 'success') {
-                console.log('Transaction status updated successfully');
-            } else {
-                console.error('Failed to update transaction status:', data.message);
+            if (data.status !== 'success') {
+                throw new Error(data.message || 'Status update failed');
             }
         } catch (error) {
             console.error('Error updating transaction status:', error);
+            this.showNotification('Gagal mengupdate status transaksi', 'error');
         }
+    }
+
+    createShippingForm() {
+        const div = document.createElement('div');
+        div.id = 'shippingForm';
+        div.className = 'p-6 border-t border-gray-200 mt-4';
+
+        const userData = document.getElementById('userData');
+        const name = userData?.dataset.name || '';
+        const phone = userData?.dataset.phone || '';
+        const address = userData?.dataset.address || '';
+
+        div.innerHTML = `
+            <h2 class="text-lg font-medium text-gray-900 mb-4">Informasi Pengiriman</h2>
+            <form id="checkoutForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
+                    <input type="text" name="name" value="${name}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-emerald-500 focus:ring-emerald-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
+                    <input type="tel" name="phone" value="${phone}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                           focus:border-emerald-500 focus:ring-emerald-500" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Alamat Pengiriman</label>
+                    <textarea name="shipping_address" rows="3" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                              focus:border-emerald-500 focus:ring-emerald-500" 
+                              required>${address}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Catatan (Opsional)</label>
+                    <textarea name="notes" rows="2" 
+                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                              focus:border-emerald-500 focus:ring-emerald-500" 
+                              placeholder="Instruksi khusus untuk pengiriman"></textarea>
+                </div>
+            </form>
+        `;
+        return div;
     }
 
     showNotification(message, type = 'success') {
         const notification = document.createElement('div');
-        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 translate-y-0 z-50 ${type === 'success' ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
-            }`;
+        notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg 
+            transform transition-transform duration-300 translate-y-0 z-50 
+            ${type === 'success' ? 'bg-emerald-500' : 'bg-red-500'} text-white`;
         notification.textContent = message;
 
         document.body.appendChild(notification);
@@ -476,6 +460,5 @@ class ShoppingCart {
         }, 3000);
     }
 }
-
 
 export default ShoppingCart;

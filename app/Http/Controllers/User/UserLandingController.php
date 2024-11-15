@@ -40,7 +40,7 @@ class UserLandingController extends Controller
         } else {
             $query->latest();
         }
-        $products = $query->paginate(6);
+        $products = $query->paginate(8);
         $products->appends($request->all());
         return view('landing.landing-page', compact('products', 'categories'));
     }
