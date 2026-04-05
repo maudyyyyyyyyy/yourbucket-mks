@@ -10,24 +10,21 @@ class OrdersController extends Controller
 {
     public function index(Request $request)
     {
-        $orders = Order::query()
-            ->with(['user', 'items.product'])
-            ->whereIn('status', ['paid', 'processing', 'shipped'])
+        $orders = Order::with(['user', 'items.product'])
             ->when($request->search, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
-                    $q->where('id', 'like', "%{$search}%")
+                    $q->where('order_code', 'like', "%{$search}%")
                         ->orWhereHas('user', function ($q) use ($search) {
                             $q->where('name', 'like', "%{$search}%")
                                 ->orWhere('email', 'like', "%{$search}%");
-                        })
-                        ->orWhere('shipping_address', 'like', "%{$search}%")
-                        ->orWhere('resi_code', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($request->status, function ($query, $status) {
-                if (in_array($status, ['paid', 'processing', 'shipped'])) {
-                    $query->where('status', $status);
-                }
+                $query->where('status', $status);
+            })
+            ->when($request->shipping_type, function ($query, $shippingType) {
+                $query->where('shipping_type', $shippingType);
             })
             ->latest()
             ->paginate(10)
@@ -38,27 +35,29 @@ class OrdersController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
-        try {
-            $request->validate([
-                'status' => 'required|string',
-                'resi_code' => 'required_if:status,shipped|string|nullable',
-            ]);
+        $allowedStatuses = ['paid', 'processing', 'shipped', 'delivered'];
 
+        $request->validate([
+            'status'    => 'required|in:' . implode(',', $allowedStatuses),
+            'resi_code' => 'nullable|string'
+        ]);
 
-            if ($request->status === 'shipped') {
-                if (empty($request->resi_code)) {
-                    throw new Exception('Resi number is required for shipped status');
-                }
-                $order->resi_code = $request->resi_code;
-                $order->save();
-            }
-
-
-            $order->updateStatus($request->status);
-
-            return redirect()->back()->with('success', 'Order status updated successfully');
-        } catch (Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+        // Resi wajib untuk shipped, kecuali pickup
+        if (
+            $request->status === 'shipped' &&
+            $order->shipping_type !== 'pickup' &&
+            empty($request->resi_code)
+        ) {
+            return back()->with('error', 'Resi wajib diisi jika status Shipped.');
         }
+
+        $order->update([
+            'status'    => $request->status,
+            'resi_code' => $request->status === 'shipped'
+                ? $request->resi_code
+                : $order->resi_code,
+        ]);
+
+        return back()->with('success', 'Status berhasil diperbarui.');
     }
 }

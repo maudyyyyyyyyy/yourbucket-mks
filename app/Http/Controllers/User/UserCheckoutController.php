@@ -6,8 +6,8 @@ use Exception;
 use Midtrans\Snap;
 use Midtrans\Config;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\OrderItem;
-use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -25,15 +25,15 @@ class UserCheckoutController extends Controller
                 throw new Exception('Midtrans server key is not configured. Please check your .env file');
             }
 
-            Config::$serverKey = $serverKey;
+            Config::$serverKey    = $serverKey;
             Config::$isProduction = config('midtrans.is_production');
-            Config::$isSanitized = config('midtrans.sanitize');
-            Config::$is3ds = config('midtrans.enable_3ds');
+            Config::$isSanitized  = config('midtrans.sanitize');
+            Config::$is3ds        = config('midtrans.enable_3ds');
 
             Log::info('Midtrans Configuration Loaded', [
                 'isProduction' => Config::$isProduction,
-                'isSanitized' => Config::$isSanitized,
-                'is3ds' => Config::$is3ds
+                'isSanitized'  => Config::$isSanitized,
+                'is3ds'        => Config::$is3ds
             ]);
         } catch (Exception $e) {
             Log::error('Midtrans configuration error: ' . $e->getMessage());
@@ -44,72 +44,106 @@ class UserCheckoutController extends Controller
     public function process(Request $request): JsonResponse
     {
         try {
+
             $request->validate([
-                'name' => ['required', 'string'],
-                'phone' => ['required', 'string'],
+                'name'             => ['required', 'string'],
+                'phone'            => ['required', 'string'],
                 'shipping_address' => ['required', 'string'],
-                'notes' => ['nullable', 'string'],
-                'cart' => ['required', 'array']
+                'notes'            => ['nullable', 'string'],
+                'cart'             => ['required', 'array'],
+                'shipping_type'    => ['required', 'string', 'in:instant,standard,pickup'],
             ]);
+
+            // ✅ Validasi stok sebelum mulai transaksi
+            foreach ($request->cart as $item) {
+                $product = Product::find($item['id']);
+
+                if (!$product) {
+                    throw new Exception('Produk tidak ditemukan: ' . ($item['name'] ?? ''));
+                }
+
+                if ($product->stock < $item['quantity']) {
+                    throw new Exception(
+                        'Stok ' . $product->name . ' tidak cukup. ' .
+                        'Stok tersedia: ' . $product->stock . ', ' .
+                        'kamu memesan: ' . $item['quantity']
+                    );
+                }
+            }
 
             DB::beginTransaction();
 
             $order = Order::create([
-                'user_id' => auth()->id(),
-                'shipping_address' => $request->shipping_address,
-                'total_amount' => 0,
-                'status' => 'pending',
-                'notes' => $request->notes
+                'user_id'          => auth()->id(),
+                'shipping_address' => $request->shipping_type === 'pickup'
+                                        ? 'Ambil di Tempat'
+                                        : $request->shipping_address,
+                'shipping_type'    => $request->shipping_type,
+                'total_amount'     => 0,
+                'status'           => 'pending',
+                'notes'            => $request->notes
             ]);
 
             $totalAmount = 0;
-            $items = [];
+            $items       = [];
 
             foreach ($request->cart as $item) {
                 OrderItem::create([
-                    'order_id' => $order->id,
+                    'order_id'   => $order->id,
                     'product_id' => $item['id'],
-                    'quantity' => $item['quantity'],
-                    'price' => $item['price']
+                    'quantity'   => $item['quantity'],
+                    'price'      => $item['price']
                 ]);
 
                 $totalAmount += ($item['price'] * $item['quantity']);
 
                 $items[] = [
-                    'id' => (string) $item['id'],
-                    'price' => (int) $item['price'],
+                    'id'       => (string) $item['id'],
+                    'price'    => (int) $item['price'],
                     'quantity' => (int) $item['quantity'],
-                    'name' => $item['name']
+                    'name'     => $item['name']
                 ];
             }
 
-            $shippingCost = 20000;
+            $shippingCost = Order::getShippingCost($request->shipping_type);
             $totalAmount += $shippingCost;
 
             $order->update(['total_amount' => $totalAmount]);
 
+            $shippingLabel = match ($request->shipping_type) {
+                'instant' => 'Instant Delivery',
+                'pickup'  => 'Ambil di Tempat',
+                default   => 'Standard Delivery',
+            };
+
+            $itemDetails = $items;
+
+            if ($shippingCost > 0) {
+                $itemDetails[] = [
+                    'id'       => 'shipping',
+                    'price'    => $shippingCost,
+                    'quantity' => 1,
+                    'name'     => 'Biaya Pengiriman (' . $shippingLabel . ')'
+                ];
+            }
+
             $params = [
                 'transaction_details' => [
-                    'order_id' => (string) $order->id,
+                    'order_id'     => (string) $order->id,
                     'gross_amount' => (int) $totalAmount,
                 ],
-                'item_details' => array_merge($items, [
-                    [
-                        'id' => 'shipping',
-                        'price' => $shippingCost,
-                        'quantity' => 1,
-                        'name' => 'Shipping Cost'
-                    ]
-                ]),
+                'item_details'     => $itemDetails,
                 'customer_details' => [
                     'first_name' => $request->name,
-                    'email' => auth()->user()->email,
-                    'phone' => $request->phone,
+                    'email'      => auth()->user()->email,
+                    'phone'      => $request->phone,
                     'billing_address' => [
                         'address' => $request->shipping_address
                     ],
                     'shipping_address' => [
-                        'address' => $request->shipping_address
+                        'address' => $request->shipping_type === 'pickup'
+                                        ? 'Ambil di Tempat'
+                                        : $request->shipping_address
                     ]
                 ]
             ];
@@ -125,9 +159,9 @@ class UserCheckoutController extends Controller
             DB::commit();
 
             return response()->json([
-                'status' => 'success',
+                'status'     => 'success',
                 'snap_token' => $snapToken,
-                'order_id' => $order->id
+                'order_id'   => $order->id
             ]);
 
         } catch (Exception $e) {
@@ -138,8 +172,8 @@ class UserCheckoutController extends Controller
             ]);
 
             return response()->json([
-                'status' => 'error',
-                'message' => 'Error processing payment: ' . $e->getMessage()
+                'status'  => 'error',
+                'message' => $e->getMessage()
             ], 422);
         }
     }
@@ -148,27 +182,33 @@ class UserCheckoutController extends Controller
     {
         try {
             $request->validate([
-                'order_id' => 'required',
+                'order_id'       => 'required',
                 'transaction_id' => 'required',
-                'payment_type' => 'required',
-                'status' => 'required|in:paid,pending,cancelled'
+                'payment_type'   => 'required',
+                'status'         => 'required|in:paid,pending,cancelled'
             ]);
 
             $order = Order::findOrFail($request->order_id);
 
-            // Pastikan user hanya bisa update ordernya sendiri
             if ($order->user_id !== auth()->id()) {
                 throw new Exception('Unauthorized access');
             }
 
+            $newStatus = match(true) {
+                $order->status === 'paid'        => 'paid',
+                $request->status === 'paid'      => 'paid',
+                $request->status === 'cancelled' => 'cancelled',
+                default                          => 'pending',
+            };
+
             $order->update([
-                'status' => $request->status,
+                'status'                  => $newStatus,
                 'midtrans_transaction_id' => $request->transaction_id,
-                'midtrans_payment_type' => $request->payment_type
+                'midtrans_payment_type'   => $request->payment_type
             ]);
 
             return response()->json([
-                'status' => 'success',
+                'status'  => 'success',
                 'message' => 'Order status updated successfully'
             ]);
 
@@ -176,7 +216,7 @@ class UserCheckoutController extends Controller
             Log::error('Error updating order status: ' . $e->getMessage());
 
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => $e->getMessage()
             ], 422);
         }

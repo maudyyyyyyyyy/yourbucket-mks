@@ -2,14 +2,13 @@
 
 namespace App\Models;
 
-use App\HasOrderStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Facades\DB;
 
 class Order extends Model
 {
-    use HasFactory, HasOrderStatus;
+    use HasFactory;
 
     protected $fillable = [
         'order_code',
@@ -17,6 +16,8 @@ class Order extends Model
         'total_amount',
         'status',
         'shipping_address',
+        'shipping_type',
+        'notes',
         'midtrans_transaction_id',
         'midtrans_payment_type',
         'snap_token',
@@ -27,15 +28,29 @@ class Order extends Model
         'total_amount' => 'decimal:2',
     ];
 
-    /**
-     * Generate order code
-     * Using database transaction and timestamp to ensure unique code
-     */
+    public const STATUSES = [
+        'paid',
+        'processing',
+        'shipped',
+        'delivered',
+    ];
+
+    public const SHIPPING_TYPES = [
+        'standard' => ['label' => 'Standard Delivery', 'cost' => 10000],
+        'instant'  => ['label' => 'Instant Delivery',  'cost' => 25000],
+        'pickup'   => ['label' => 'Ambil di Tempat',   'cost' => 0],
+    ];
+
+    public static function getShippingCost(string $shippingType): int
+    {
+        return self::SHIPPING_TYPES[$shippingType]['cost'] ?? 10000;
+    }
+
     public static function generateOrderCode(): string
     {
         return DB::transaction(function () {
             $prefix = 'ORDE';
-            $timestamp = now()->format('ymdHis'); // Format: YYMMDDHHMMSS
+            $timestamp = now()->format('ymdHis');
 
             $lastOrder = DB::table('orders')
                 ->where('order_code', 'like', $prefix . $timestamp . '%')
@@ -43,14 +58,14 @@ class Order extends Model
                 ->lockForUpdate()
                 ->first();
 
-            $sequence = $lastOrder ? (intval(substr($lastOrder->order_code, -3)) + 1) : 1;
+            $sequence = $lastOrder
+                ? (intval(substr($lastOrder->order_code, -3)) + 1)
+                : 1;
+
             return $prefix . $timestamp . str_pad($sequence, 3, '0', STR_PAD_LEFT);
         });
     }
 
-    /**
-     * Boot function dari model.
-     */
     protected static function boot()
     {
         parent::boot();
@@ -62,37 +77,15 @@ class Order extends Model
         });
     }
 
-    /**
-     * Get possible next statuses
-     */
-    public function getNextPossibleStatuses(): array
+    public function getStatusColorAttribute()
     {
-        if ($this->status === 'cancelled') {
-            return [];
-        }
-
-        if ($this->status === 'delivered') {
-            return ['cancelled'];
-        }
-
-        $statusFlow = [
-            'pending' => ['paid', 'cancelled'],
-            'paid' => ['processing', 'cancelled'],
-            'processing' => ['shipped', 'cancelled'],
-            'shipped' => ['delivered', 'cancelled'],
-        ];
-
-        return $statusFlow[$this->status] ?? [];
-    }
-
-    /**
-     * Check if order has items with stock
-     */
-    public function hasStock(): bool
-    {
-        return $this->items->every(function ($item) {
-            return $item->product->hasStock($item->quantity);
-        });
+        return match ($this->status) {
+            'paid'        => 'info',
+            'processing'  => 'primary',
+            'shipped'     => 'dark',
+            'delivered'   => 'success',
+            default       => 'secondary',
+        };
     }
 
     public function user()
@@ -107,12 +100,12 @@ class Order extends Model
 
     public function calculateTotal()
     {
-        $total = $this->items->sum(function ($item) {
-            return $item->price * $item->quantity;
-        });
+        $itemsTotal = $this->items->sum(fn($item) => $item->price * $item->quantity);
+        $shippingCost = self::getShippingCost($this->shipping_type ?? 'standard');
 
-        $this->total_amount = number_format($total, 2, '.', '');
-        $this->save();
+        $this->update([
+            'total_amount' => number_format($itemsTotal + $shippingCost, 2, '.', '')
+        ]);
 
         return $this;
     }

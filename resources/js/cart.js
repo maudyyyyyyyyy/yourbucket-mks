@@ -1,7 +1,7 @@
 class ShoppingCart {
     constructor() {
         this.items = this.getCartFromStorage();
-        this.SHIPPING_COST = 20000;
+        this.SHIPPING_COST = 0;
         this.init();
     }
 
@@ -216,7 +216,7 @@ class ShoppingCart {
         cartContainer.appendChild(cartContent);
 
         const subtotal = this.calculateSubtotal();
-        this.updateOrderSummary(subtotal, this.SHIPPING_COST);
+        this.updateOrderSummary(subtotal, 0);
     }
 
     attachItemEventListeners(element, productId) {
@@ -266,8 +266,13 @@ class ShoppingCart {
                 e.preventDefault();
                 if (this.items.length === 0) return;
 
+                const shippingType = document.getElementById('shippingType')?.value;
+
                 const shippingForm = document.getElementById('shippingForm');
                 if (!shippingForm) return;
+
+                // Sembunyikan field alamat jika pickup
+                this.toggleAddressField(shippingType);
 
                 shippingForm.classList.remove('hidden');
                 checkoutButton.classList.add('hidden');
@@ -285,14 +290,37 @@ class ShoppingCart {
         }
     }
 
+    // Sembunyikan/tampilkan field alamat tergantung shipping type
+    toggleAddressField(shippingType) {
+        const addressField = document.getElementById('addressField');
+        if (!addressField) return;
+
+        if (shippingType === 'pickup') {
+            addressField.classList.add('hidden');
+            addressField.querySelector('textarea')?.removeAttribute('required');
+        } else {
+            addressField.classList.remove('hidden');
+            addressField.querySelector('textarea')?.setAttribute('required', 'required');
+        }
+    }
+
     async processPayment() {
+        const shippingSelect = document.getElementById('shippingType');
+        const shippingType = shippingSelect ? shippingSelect.value : 'standard';
+
         const form = document.getElementById('checkoutForm');
-        if (!form || !form.checkValidity()) {
-            form?.reportValidity();
+        if (!form) return;
+
+        // Untuk pickup, field alamat tidak wajib — skip validasi alamat
+        if (shippingType !== 'pickup' && !form.checkValidity()) {
+            form.reportValidity();
             return;
         }
 
         const formData = new FormData(form);
+
+        console.log('=== DEBUG ===', 'shippingType:', shippingType);
+
         const payButton = document.getElementById('payButton');
         if (payButton) {
             payButton.disabled = true;
@@ -310,8 +338,9 @@ class ShoppingCart {
                 body: JSON.stringify({
                     name: formData.get('name'),
                     phone: formData.get('phone'),
-                    shipping_address: formData.get('shipping_address'),
+                    shipping_address: shippingType === 'pickup' ? 'Ambil di Tempat' : formData.get('shipping_address'),
                     notes: formData.get('notes'),
+                    shipping_type: shippingType,
                     cart: this.items
                 })
             });
@@ -401,6 +430,7 @@ class ShoppingCart {
         }
     }
 
+    // Form pengiriman — field alamat punya id="addressField" supaya bisa di-toggle
     createShippingForm() {
         const div = document.createElement('div');
         div.id = 'shippingForm';
@@ -413,35 +443,42 @@ class ShoppingCart {
 
         div.innerHTML = `
             <h2 class="text-lg font-medium text-gray-900 mb-4">Informasi Pengiriman</h2>
+
             <form id="checkoutForm" class="space-y-4">
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Nama Lengkap</label>
                     <input type="text" name="name" value="${name}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                           focus:border-emerald-500 focus:ring-emerald-500" required>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                        focus:border-emerald-500 focus:ring-emerald-500" required>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Nomor Telepon</label>
                     <input type="tel" name="phone" value="${phone}"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                           focus:border-emerald-500 focus:ring-emerald-500" required>
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                        focus:border-emerald-500 focus:ring-emerald-500" required>
                 </div>
-                <div>
+
+                <div id="addressField">
                     <label class="block text-sm font-medium text-gray-700">Alamat Pengiriman</label>
-                    <textarea name="shipping_address" rows="3" 
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                              focus:border-emerald-500 focus:ring-emerald-500" 
-                              required>${address}</textarea>
+                    <textarea name="shipping_address" rows="3"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                        focus:border-emerald-500 focus:ring-emerald-500"
+                        required>${address}</textarea>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Catatan (Opsional)</label>
-                    <textarea name="notes" rows="2" 
-                              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
-                              focus:border-emerald-500 focus:ring-emerald-500" 
-                              placeholder="Instruksi khusus untuk pengiriman"></textarea>
+                    <textarea name="notes" rows="2"
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                        focus:border-emerald-500 focus:ring-emerald-500"
+                        placeholder="Instruksi khusus untuk pengiriman"></textarea>
                 </div>
+
             </form>
         `;
+
         return div;
     }
 

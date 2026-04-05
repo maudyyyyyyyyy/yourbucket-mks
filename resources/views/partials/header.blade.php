@@ -6,6 +6,6 @@
         </button>
 
         <!-- Header Title -->
-        <h1 class="h5 mb-0">@yield('title', 'Dashboard')</h1>
+        <h1 class="h5 mb-0">{{ $__env->yieldContent('title', 'Dashboard') }}</h1>
     </div>
 </header>

@@ -13,7 +13,7 @@
     <style>
         body {
             min-height: 100vh;
-            background: #f5f6fa;
+            background: #ffffff;
         }
 
         .layout-container {

@@ -13,11 +13,7 @@ class OrderItem extends Model
         'order_id',
         'product_id',
         'quantity',
-        'price',
-    ];
-
-    protected $casts = [
-        'price' => 'decimal:2',
+        'price'
     ];
 
     public function order()
@@ -28,20 +24,5 @@ class OrderItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
-    }
-
-    public function getSubtotal()
-    {
-        return $this->price * $this->quantity;
-    }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($orderItem) {
-            $orderItem->price = $orderItem->product->price;
-            $orderItem->product->decreaseStock($orderItem->quantity);
-        });
     }
 }

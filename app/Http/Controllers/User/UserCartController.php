@@ -3,12 +3,20 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Order;
 
 class UserCartController extends Controller
 {
     public function index()
     {
-        return view('landing.shopping-cart');
+        $order = Order::with(['items.product.category'])
+            ->where('user_id', auth()->id())
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+
+        $cartItems = $order ? $order->items : collect();
+
+        return view('landing.shopping-cart', compact('cartItems', 'order'));
     }
 }

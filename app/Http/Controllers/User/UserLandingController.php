@@ -41,7 +41,10 @@ class UserLandingController extends Controller
             $query->latest();
         }
         $products = $query->paginate(8);
+        // Menambahkan parameter query ke URL pagination untuk mempertahankan filter dan pencarian saat navigasi halaman
         $products->appends($request->all());
         return view('landing.landing-page', compact('products', 'categories'));
     }
+
+
 }

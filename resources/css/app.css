@@ -14,11 +14,11 @@
     }
 
     .text-accent {
-        @apply text-emerald-600;
+        @apply text-purple-600;
     }
 
     .bg-gradient-custom {
-        @apply bg-gradient-to-br from-emerald-50 to-teal-50;
+        @apply bg-gradient-to-br from-purple-50 to-teal-50;
     }
 
     .bg-card {
@@ -26,16 +26,16 @@
     }
 
     .btn-primary {
-        @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white hover:opacity-90 transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2;
+        @apply bg-gradient-to-r from-purple-500 to-teal-500 text-white hover:opacity-90 transition-all hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2;
     }
 
     .input-field {
-        @apply w-full px-5 py-4 text-gray-700 bg-gray-50/50 rounded-xl outline-none transition-all border border-gray-100 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200;
+        @apply w-full px-5 py-4 text-gray-700 bg-gray-50/50 rounded-xl outline-none transition-all border border-gray-100 focus:border-purple-500 focus:ring-2 focus:ring-purple-200;
     }
 
     /* Additional components for our admin panel */
     .btn-secondary {
-        @apply px-4 py-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-200;
+        @apply px-4 py-2 text-purple-600 bg-purple-50 hover:bg-purple-100 transition-all rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-200;
     }
 
     .btn-danger {
@@ -51,7 +51,7 @@
     }
 
     .badge-success {
-        @apply bg-emerald-100 text-emerald-700;
+        @apply bg-purple-100 text-purple-700;
     }
 
     .badge-danger {
@@ -99,7 +99,7 @@
     }
 
     .icon-button-primary {
-        @apply icon-button text-emerald-600 hover:bg-emerald-50 focus:ring-emerald-400;
+        @apply icon-button text-purple-600 hover:bg-purple-50 focus:ring-purple-400;
     }
 
     .icon-button-danger {
@@ -123,10 +123,18 @@
     }
 
     .pagination-active {
-        @apply z-10 bg-emerald-50 text-emerald-600 hover:bg-emerald-100;
+        @apply z-10 bg-purple-50 text-purple-600 hover:bg-purple-100;
     }
 
     .pagination-disabled {
         @apply opacity-50 cursor-not-allowed;
     }
+
+    .hero-bg {
+        background-image: url('https://img.freepik.com/free-vector/abstract-colorful-low-poly-triangle-shapes_361591-3183.jpg');
+        background-size: cover;
+        background-position: center;
+        background-blend-mode: darken;
+        background-color: rgba(0, 0, 0, 0.5);
+       }
 }
