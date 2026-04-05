@@ -1,5 +1,8 @@
-[phases.setup]
-nixPkgs = ["php83", "php83Extensions.gd", "php83Extensions.mbstring", "php83Extensions.xml", "php83Extensions.curl", "php83Extensions.zip", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "composer"]
-
-[start]
+[phases.setup] 
+nixPkgs = ["php83", "php83Extensions.gd", "php83Extensions.mbstring", "php83Extensions.xml", "php83Extensions.curl", "php83Extensions.zip", "php83Extensions.pdo", "php83Extensions.pdo_mysql", "composer"] 
+ 
+[phases.install] 
+cmds = ["composer install --ignore-platform-reqs --no-interaction --optimize-autoloader"] 
+ 
+[start] 
 cmd = "php artisan serve --host=0.0.0.0 --port=$PORT"
